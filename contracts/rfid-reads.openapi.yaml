@@ -1,0 +1,1101 @@
+openapi: 3.1.0
+info:
+  title: WMS Enterprise — Ingesta RFID móvil por HTTPS (Cubip Scan)
+  version: 0.3.1-draft
+  summary: Contrato BORRADOR de la app Flutter Cubip Scan (lector BLE Geenfc A7) — envío de lotes RFID, listado de bodegas, directorio de ubicaciones y prueba de conexión.
+  description: |
+    Estado: **BORRADOR / Propuesto** (ADR-017, decisiones técnicas cerradas por arquitectura el 2026-11-19;
+    pendiente solo de los hosts públicos). Luis priorizó la implementación antes de AC-07 para la demo.
+    No usar en producción hasta que el ADR esté aprobado.
+
+    Cambios v3.1 (0.3.1-draft) respecto a v3 (0.3.0-draft); solo añade, no rompe nada de v3:
+    - Documentado el listado M2 **existente** `GET /api/v1/warehouse/warehouses` (`listWarehouses`) para el
+      selector de bodega de la app: sobre `{ "data": [...] }`, campos `id`, `code` y `name`, errores RFC 9457.
+      No es una ruta nueva. Se documenta el **contrato objetivo**: solo las bodegas a las que el usuario tiene
+      acceso y paginación opcional (`limit` + `cursor` → `next_cursor`). Hoy la API no pagina y tiene un caso
+      de filtro incompleto (ver `gap-lista-bodegas.md`); sin `limit` ni `cursor` la respuesta es la de hoy.
+
+    Cambios v3 (0.3.0-draft) respecto a v2 (0.2.0-draft); solo añade, no rompe nada de v2:
+    - Nuevo `GET /api/v1/warehouse/warehouses/{id}/location-directory` (solo lectura): ubicaciones de la
+      bodega con `id`, `code`, `name` y `label_epc` para que "Fijar ubicación" resuelva el EPC del bin.
+    - Nuevo `GET /healthz` (público, sin token) para el botón "Probar conexión".
+    - Documentada la sesión: refresh tokens sin `offline_access`, ligados a la sesión SSO (8 h / 12 h);
+      la app refresca ante un 401.
+
+    Cambios v2 (0.2.0-draft) respecto a v1 (0.1.0-draft):
+    - Ruta: `POST /api/v1/rfid/reads` pasa a `POST /api/v1/rfid/read-batches` (operationId
+      `createRfidReadBatch`), alineada con `references/api-contracts.md` del repo.
+    - `location_id` sigue opcional: es la "Ubicación actual" de la app y vale para todo el lote. Sin ella,
+      las lecturas se aceptan igual y van a la lista de "lecturas móviles sin ubicación".
+    - `tid` sigue opcional, ahora se guarda en su propia columna (protección contra clonación).
+    - Límites de cuota configurables en el servidor (los valores de este contrato son los por defecto).
+
+    Reglas clave:
+    - El tenant sale del token verificado y de la membresía activa en `iam.memberships`; **nunca** del body.
+    - `warehouse_id` es obligatorio y se valida contra el tenant y el alcance de bodegas del usuario.
+    - `reader_id` es el serial BLE del lector (p. ej. `NA72512130766`). El lector debe estar **registrado
+      previamente** por un administrador en `rfid.readers` (sin alta automática).
+    - Cada lectura lleva `client_read_id` (UUID); es la clave de idempotencia con alcance (tenant, lector).
+      Reenviar una lectura ya aceptada la cuenta como duplicada y no crea otra fila.
+    - `location_id` (opcional) es la "Ubicación actual" fijada en la app escaneando la etiqueta del bin o
+      eligiéndola de una lista; aplica a **todo** el lote. Si el operador cambia de ubicación, la app cierra
+      el lote en curso y abre otro. Sin `location_id`, las lecturas se guardan y se listan como
+      "lecturas móviles sin ubicación" (no se pintan en el mapa de Presencia RFID).
+    - En el piloto, cualquier usuario con permiso en la bodega puede usar cualquier lector registrado en
+      ella; cada lectura queda trazada con el usuario que la envió (`submitted_by`).
+    - Una lectura RFID **no** mueve inventario (Invariante 7): solo alimenta la bitácora `rfid.read_events`,
+      la Presencia RFID del gemelo 3D y la conciliación de M10.
+    - Validación en dos niveles: un error **estructural** (JSON inválido, campo obligatorio ausente, tipo
+      incorrecto, `client_read_id` que no es UUID, más de 500 lecturas) rechaza el lote completo con 400.
+      Un error de **valor** en una lectura (EPC, TID, RSSI, antena, `read_at` fuera de ventana) solo rechaza
+      esa lectura y se informa en `rejected[]` dentro de una respuesta 202. Los patrones y rangos de este
+      contrato existen para que el cliente pre-valide; el servidor los aplica por lectura.
+
+    Autenticación: OAuth 2.0 Authorization Code + PKCE (S256) contra Keycloak, realm `wms-realm`,
+    cliente público `wms-mobile` (sin secreto). Piloto: redirect con esquema propio
+    `com.megadeep.cubipscan:/oauth` + PKCE (RFC 8252). Producción: Android App Links / iOS Universal Links
+    cuando haya dominio. El access token debe incluir `aud` = `wms-api` y `azp` = `wms-mobile`.
+
+    Sesión y refresh (detalle en el securityScheme `wmsKeycloak`): el cliente `wms-mobile` emite refresh
+    tokens **sin** `offline_access`, ligados a la sesión SSO de Keycloak (8 h de inactividad y 12 h de vida
+    máxima). Ante un 401 la app hace un refresh y reintenta **una sola vez** la misma petición (mismo
+    `Idempotency-Key` y mismos `client_read_id`); si el refresh falla, borra los tokens y pide login de
+    nuevo sin perder el buffer offline.
+    El permiso WMS `rfid:reads:write` NO es un scope OAuth: se resuelve en base de datos por membresía.
+  contact:
+    name: WMS Enterprise — equipo de arquitectura
+  license:
+    name: Propietario
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: http://localhost:8081
+    description: |
+      Desarrollo local (API en localhost). Keycloak de desarrollo:
+      issuer `http://localhost:8080/realms/wms-realm` (valor por defecto de AUTH_ISSUER).
+    x-keycloak-issuer: http://localhost:8080/realms/wms-realm
+  - url: https://{apiHost}
+    description: |
+      Piloto / producción. Keycloak del mismo entorno en `https://{keycloakHost}/realms/wms-realm`
+      (ver `x-keycloak-issuer`). Los hosts reales siguen pendientes de Luis (pregunta 9 del ADR): el
+      dominio del piloto no está definido. Los hosts de abajo son marcadores de posición.
+    variables:
+      apiHost:
+        default: api.cubip.example
+        description: Host público de apps/api detrás de Caddy (TLS).
+    x-keycloak-issuer: https://auth.cubip.example/realms/wms-realm
+security:
+  - wmsKeycloak: [openid]
+tags:
+  - name: rfid
+    description: Telemetría RFID (no contable).
+  - name: warehouse
+    description: Topología de bodega (M2), solo lectura desde la app.
+  - name: health
+    description: Comprobación de conectividad.
+paths:
+  /healthz:
+    get:
+      tags: [health]
+      operationId: getLiveness
+      summary: Prueba de conexión con la API (liveness, público).
+      description: |
+        Contrato real de `apps/api` (`internal/platform/router/router.go:86`, handler
+        `internal/health/handler.go:32-39`): ruta pública en la raíz del host (**no** bajo `/api/v1`),
+        sin autenticación. Responde siempre 200 con `{"status":"UP"}` y `Content-Type: application/json`
+        mientras el proceso atiende peticiones; la cabecera `X-Correlation-ID` la añade el middleware global.
+        Es solo liveness: **no** comprueba PostgreSQL ni Keycloak. Cualquier otro código, un timeout o un
+        error de red/TLS significa "sin conexión con la API". No envía ni requiere token.
+      security: []
+      responses:
+        '200':
+          description: La API está viva.
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/XCorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Liveness'
+              example:
+                status: UP
+  /api/v1/warehouse/warehouses:
+    get:
+      tags: [warehouse]
+      operationId: listWarehouses
+      summary: Bodegas a las que el usuario tiene acceso (selector de bodega de la app).
+      description: |
+        Listado M2 **existente** (no es una ruta nueva): `internal/platform/router/router.go:120`
+        (`warehouse:view` con `iam.RequirePermission`, tras `auth.Middleware` en `:101` e
+        `iam.PermissionResolver` en `:116`), handler `internal/warehouse/handler.go:128-156`, repositorio
+        `internal/warehouse/repository.go:80-105` (RLS por tenant con `WithTenantTx`, `ORDER BY code ASC`).
+        Es la misma ruta que usa el WMS web (`getWarehouses`, que lee `data` y trata `null` como `[]`).
+
+        Flujo en Cubip Scan: tras el login, pedir este listado, mostrar `code` y `name`, y con el `id` elegido
+        descargar `GET /api/v1/warehouse/warehouses/{id}/location-directory` y enviar los lotes con ese
+        `warehouse_id`.
+
+        **Contrato objetivo** (lo que la app debe asumir):
+        - Solo devuelve las bodegas a las que el usuario tiene acceso: todas las del tenant si es SUPERADMIN,
+          ADMIN, AUDITOR con membresía global o identidad ERP (`HasTenantWideAccess`); si no, solo las bodegas
+          de sus membresías con `warehouse_id`. Es exactamente el criterio de `CanAccessWarehouse`
+          (`internal/iam/models.go:66-77`), el mismo que aplica `RequireWarehouseAccess` al resto de rutas
+          `/warehouses/{id}/...`, así que cualquier bodega listada se puede abrir sin 403.
+        - Paginación **opcional**, compatible con la web: sin `limit` ni `cursor` devuelve la lista completa
+          (como hoy) con `next_cursor: null`. Con `limit` y/o `cursor` devuelve páginas en orden estable por
+          `code` (único por tenant, `uq_warehouse_code`).
+        - `data` es siempre un array (vacío si no hay bodegas accesibles).
+
+        Estado del código en `4eae00c` (brecha documentada en `gap-lista-bodegas.md`, la implementa otro
+        proceso): **no pagina** (ignora `limit`/`cursor` y no envía `next_cursor`); el filtro por acceso se
+        salta cuando el usuario no tiene membresías por bodega ni acceso de tenant completo (p. ej.
+        WAREHOUSE_MANAGER u OPERATOR con membresía global), y en ese caso devuelve todas las bodegas del
+        tenant; con lista vacía envía `"data": null`. Mientras tanto la app debe tolerar `data: null` (como
+        `[]`), la ausencia de `next_cursor` (como `null`) y que una bodega listada responda 403 al abrirla.
+
+        Cada elemento incluye hoy el objeto `Warehouse` completo (`internal/warehouse/models.go:10-22`); la
+        app solo necesita `id`, `code` y `name` y debe ignorar el resto (`status` permite marcar las
+        bodegas INACTIVE, que también se listan).
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: |
+            Tamaño de página (1-500). Opcional: si se omite junto con `cursor`, se devuelve la lista completa.
+            Si se envía solo `cursor`, el tamaño es 200. Hoy la API lo ignora (ver `gap-lista-bodegas.md`).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: cursor
+          in: query
+          required: false
+          description: Cursor opaco devuelto en `next_cursor` de la página anterior. Orden estable por `code`.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: Bodegas accesibles para el usuario, ordenadas por `code`.
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/XCorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseListPage'
+              examples:
+                pagina:
+                  $ref: '#/components/examples/WarehouseListPage'
+                completa:
+                  $ref: '#/components/examples/WarehouseListFull'
+        '400':
+          $ref: '#/components/responses/WarehouseListBadQuery'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/WarehouseListForbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/warehouse/warehouses/{id}/location-directory:
+    get:
+      tags: [warehouse]
+      operationId: listWarehouseLocationDirectory
+      summary: Directorio compacto de ubicaciones de una bodega (para "Fijar ubicación").
+      description: |
+        Solo lectura. Devuelve las ubicaciones de la bodega con `id`, `code`, `name` y `label_epc`, para que
+        Cubip Scan resuelva el EPC de la etiqueta del bin (o el código) a un `location_id` y lo use como
+        "Ubicación actual" en `POST /api/v1/rfid/read-batches`.
+
+        Misma familia, permiso y alcance que el listado M2 existente
+        `GET /api/v1/warehouse/warehouses/{id}/locations`: permiso `warehouse:view` y acceso a la bodega
+        `{id}` (`RequireWarehouseAccess("id")`). Lo tienen OPERATOR y WAREHOUSE_MANAGER (y ADMIN como
+        administrador del tenant). A diferencia del listado M2, este va paginado, con campos mínimos.
+
+        La bodega `{id}` se elige antes con `GET /api/v1/warehouse/warehouses` (`listWarehouses`).
+
+        Recomendado: descargarlo al elegir bodega, guardarlo en caché local y resolver el EPC del bin sin
+        red. `label_epc` llega en hexadecimal en MAYÚSCULAS; la app debe normalizar el EPC leído igual
+        (quitar espacios y pasar a mayúsculas) antes de comparar.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: '`warehouse_id` de la bodega.'
+          schema:
+            type: string
+            format: uuid
+        - name: code
+          in: query
+          required: false
+          description: Filtro opcional por prefijo de `code`, sin distinguir mayúsculas (p. ej. `A01-01`).
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 50
+            pattern: '^[A-Za-z0-9._-]{1,50}$'
+        - name: limit
+          in: query
+          required: false
+          description: Tamaño de página (por defecto 200, máximo 500).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 200
+        - name: cursor
+          in: query
+          required: false
+          description: Cursor opaco devuelto en `next_cursor` de la página anterior. Orden estable por `code`.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: Página de ubicaciones.
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/XCorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationDirectoryPage'
+              examples:
+                pagina:
+                  $ref: '#/components/examples/LocationDirectoryPage'
+        '400':
+          $ref: '#/components/responses/BadQuery'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/WarehouseForbidden'
+        '404':
+          $ref: '#/components/responses/DirectoryWarehouseNotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/rfid/read-batches:
+    post:
+      tags: [rfid]
+      operationId: createRfidReadBatch
+      summary: Envía un lote de hasta 500 lecturas RFID de un lector móvil.
+      description: |
+        Acepta el lote de forma asíncrona (202). Las lecturas aceptadas se persisten en `rfid.read_events`
+        con `source = MOBILE` y la trazabilidad del usuario. Nunca escribe inventario.
+        Cuando la clasificación T12 esté activa (requiere RabbitMQ y el consumidor del gateway, obligatorios
+        antes de producción), se publica además el evento `rfid.reads.ingested.v1` por el outbox. En el
+        piloto/demo no hay cuarentena T12 para lecturas móviles; el contrato HTTP no cambia.
+
+        Requisitos de autorización (fail-closed):
+        1. Bearer válido de Keycloak (firma JWKS, `iss`, `aud=wms-api`, `azp=wms-mobile`, `exp`).
+        2. Membresía activa en el tenant del token.
+        3. Permiso `rfid:reads:write` con alcance sobre `warehouse_id` (o tenant completo).
+        4. `warehouse_id` existe en el tenant y el usuario tiene acceso a esa bodega.
+        5. `reader_id` registrado en el tenant, en estado ACTIVE y asignado a esa misma bodega.
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        description: Tamaño máximo del body 512 KiB (si se supera, 413). Content-Type `application/json`.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RfidReadBatch'
+            examples:
+              loteNormal:
+                $ref: '#/components/examples/BatchNA72512130766'
+      responses:
+        '202':
+          description: Lote aceptado para procesamiento. Puede contener lecturas duplicadas o rechazadas.
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/XCorrelationId'
+            Idempotent-Replayed:
+              description: '`true` si la respuesta es la repetición almacenada de un `Idempotency-Key` ya usado con el mismo body.'
+              schema:
+                type: boolean
+            RateLimit-Policy:
+              $ref: '#/components/headers/RateLimitPolicy'
+            RateLimit:
+              $ref: '#/components/headers/RateLimit'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RfidReadsAccepted'
+              examples:
+                parcial:
+                  $ref: '#/components/examples/AcceptedPartial'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/WarehouseNotFound'
+        '409':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableReader'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+components:
+  securitySchemes:
+    wmsKeycloak:
+      type: oauth2
+      description: |
+        Keycloak OIDC, realm `wms-realm`, cliente público `wms-mobile`.
+        Authorization Code con PKCE obligatorio (`code_challenge_method=S256`), sin client secret.
+        Redirect URI exacta en el piloto: `com.megadeep.cubipscan:/oauth` (esquema propio + PKCE, RFC 8252);
+        en producción, App Links / Universal Links cuando haya dominio. Navegador del sistema (AppAuth),
+        nunca WebView.
+
+        Tokens y sesión:
+        - Access token de 5 min (`access.token.lifespan=300`).
+        - El token endpoint devuelve un **refresh token sin `offline_access`** (no pedir ese scope): está
+          ligado a la sesión SSO de Keycloak, con **8 h de inactividad** y **12 h de vida máxima**
+          (`client.session.idle.timeout=28800`, `client.session.max.lifespan=43200`). Al cerrarse la sesión
+          (inactividad, máximo, logout o revocación), el refresh deja de servir y hay que iniciar sesión.
+        - Con la rotación del realm activada (tarea de realm), cada refresh devuelve un refresh token nuevo
+          y el anterior queda inválido: guardar siempre el último.
+        - **Ante un 401** de la API, la app hace `grant_type=refresh_token` y reintenta **una sola vez** la
+          misma petición. Si el refresh falla (`invalid_grant`), borra los tokens y vuelve al login; el
+          buffer offline se conserva y se reenvía después con los mismos `client_read_id`. Recomendado
+          también refrescar de forma proactiva poco antes de `exp`.
+        - Tokens en almacenamiento seguro (Android Keystore / iOS Keychain); nunca en logs.
+        Las URLs de abajo son las de desarrollo. Para cada servidor, sustituir el prefijo por su
+        `x-keycloak-issuer`:
+        `{issuer}/protocol/openid-connect/auth`, `{issuer}/protocol/openid-connect/token`,
+        descubrimiento en `{issuer}/.well-known/openid-configuration`.
+      x-pkce-code-challenge-method: S256
+      x-client-id: wms-mobile
+      x-redirect-uri: com.megadeep.cubipscan:/oauth
+      flows:
+        authorizationCode:
+          authorizationUrl: http://localhost:8080/realms/wms-realm/protocol/openid-connect/auth
+          tokenUrl: http://localhost:8080/realms/wms-realm/protocol/openid-connect/token
+          refreshUrl: http://localhost:8080/realms/wms-realm/protocol/openid-connect/token
+          scopes:
+            openid: Identidad OIDC (obligatorio).
+            profile: Nombre visible del operador (opcional).
+  parameters:
+    XCorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      description: |
+        Identificador de correlación. Si falta, la API genera un UUID y lo devuelve en la respuesta.
+        Se recomienda un UUID por intento de envío.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: '^[A-Za-z0-9._:-]{1,128}$'
+      example: 3f1c2b7e-9a41-4d0e-8c55-2f7d6a1b9e10
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: |
+        Opcional, por lote. Alcance: (tenant, `mobile:{reader_id}`, clave). Misma clave + mismo body
+        (hash SHA-256 del JSON canónico) devuelve la respuesta original con `Idempotent-Replayed: true`.
+        Misma clave + body distinto devuelve 409. Retención mínima 72 h. Recomendado: UUID v4 por lote,
+        reutilizado en cada reintento de ese mismo lote.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 150
+        pattern: '^[A-Za-z0-9._:-]{8,150}$'
+      example: 0b6f1e4a-3c2d-4e5f-8a9b-1c2d3e4f5a6b
+  headers:
+    XCorrelationId:
+      description: Identificador de correlación de la petición (eco del recibido o generado por la API).
+      schema:
+        type: string
+    RetryAfter:
+      description: Segundos que el cliente debe esperar antes de reintentar.
+      schema:
+        type: integer
+        minimum: 1
+    RateLimitPolicy:
+      description: Política de cuota aplicada (borrador IETF RateLimit headers). Informativo.
+      schema:
+        type: string
+      example: '"per-reader";q=30;w=60'
+    RateLimit:
+      description: Cuota restante (borrador IETF RateLimit headers). Informativo.
+      schema:
+        type: string
+      example: '"per-reader";r=12;t=34'
+    WWWAuthenticate:
+      description: Desafío Bearer.
+      schema:
+        type: string
+      example: Bearer realm="wms-enterprise"
+  schemas:
+    RfidReadBatch:
+      type: object
+      additionalProperties: false
+      required: [warehouse_id, reader_id, reads]
+      properties:
+        warehouse_id:
+          type: string
+          format: uuid
+          description: Bodega donde se hicieron las lecturas. Debe ser la bodega asignada al lector.
+        reader_id:
+          type: string
+          minLength: 6
+          maxLength: 50
+          pattern: '^[A-Z0-9]{6,50}$'
+          description: |
+            Serial BLE del lector (p. ej. `NA72512130766`), en mayúsculas. Es `rfid.readers.reader_code`
+            (VARCHAR(50), único por tenant). No es un secreto: identifica, no autentica.
+          examples: [NA72512130766]
+        location_id:
+          type: string
+          format: uuid
+          description: |
+            Opcional. "Ubicación actual" de Cubip Scan, fijada escaneando la etiqueta del bin o eligiéndola
+            de una lista; aplica a todas las lecturas del lote (si cambia, la app empieza otro lote).
+            Se valida que exista en el tenant (404) y que pertenezca a `warehouse_id` (422
+            `LOCATION_NOT_IN_WAREHOUSE`). Sin ella, las lecturas se aceptan igual, no aparecen en el mapa de
+            Presencia RFID y quedan en la lista de "lecturas móviles sin ubicación" del WMS.
+        app:
+          $ref: '#/components/schemas/ClientApp'
+        reads:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/RfidRead'
+    RfidRead:
+      type: object
+      additionalProperties: false
+      required: [client_read_id, epc, rssi_dbm, antenna, read_at]
+      properties:
+        client_read_id:
+          type: string
+          format: uuid
+          description: |
+            UUID generado por la app al capturar la lectura y conservado en todos los reintentos.
+            Clave de idempotencia con alcance (tenant, lector). La fila se identifica con
+            `id = UUIDv5(NameSpaceOID, "mobile:{tenant_id}:{reader_uuid}:{client_read_id}")`.
+        epc:
+          type: string
+          minLength: 16
+          maxLength: 124
+          pattern: '^([0-9A-Fa-f]{4}){4,31}$'
+          description: |
+            EPC en hexadecimal, alineado a palabras de 16 bits (16 a 124 caracteres; EPC de 96 bits = 24).
+            Sin separadores ni prefijo URN. La API lo normaliza a MAYÚSCULAS.
+          examples: [E28011700000020F1A2B3C4D]
+        tid:
+          type: string
+          minLength: 8
+          maxLength: 128
+          pattern: '^([0-9A-Fa-f]{4}){2,32}$'
+          description: |
+            Opcional. TID del chip (identificador único de fábrica) en hexadecimal, 8 a 128 caracteres en
+            palabras de 16 bits. Se normaliza a MAYÚSCULAS y se guarda en la columna `rfid.read_events.tid`
+            (sirve para detectar etiquetas clonadas: mismo EPC con distinto TID). No es dato personal.
+            Nunca se registra en logs ni se devuelve en la respuesta. Enviarlo si el lector lo entrega.
+          examples: [E2801170200040A1B2C3]
+        rssi_dbm:
+          type: number
+          minimum: -120
+          maximum: 0
+          description: RSSI en dBm (valores negativos). Se guarda con 2 decimales.
+        antenna:
+          type: integer
+          minimum: 1
+          maximum: 8
+          description: Puerto de antena del lector (Geenfc A7 = 1). Debe existir en `rfid.antennas` para ese lector.
+        read_at:
+          type: string
+          format: date-time
+          description: |
+            Momento de la lectura en RFC 3339 con zona (`Z` u offset); la API lo convierte a UTC.
+            Ventana aceptada: no más de 5 min en el futuro respecto al reloj del servidor y no más de
+            7 días en el pasado (buffer offline). Fuera de la ventana, la lectura se rechaza.
+    ClientApp:
+      type: object
+      additionalProperties: false
+      description: Metadatos opcionales de la app, solo para diagnóstico. No se usan para autorización.
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          examples: [cubip-scan]
+        version:
+          type: string
+          maxLength: 30
+          examples: [1.4.0+27]
+        platform:
+          type: string
+          enum: [android, ios]
+    RfidReadsAccepted:
+      type: object
+      additionalProperties: false
+      required: [batch_id, warehouse_id, reader_id, received_at, accepted, duplicates, rejected]
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+          description: Identificador del lote asignado por la API (trazabilidad y outbox).
+        warehouse_id:
+          type: string
+          format: uuid
+        reader_id:
+          type: string
+          description: Serial del lector, tal como se registró.
+        received_at:
+          type: string
+          format: date-time
+          description: Hora del servidor (UTC) al recibir el lote.
+        accepted:
+          type: integer
+          minimum: 0
+          maximum: 500
+          description: Lecturas nuevas persistidas en este envío.
+        duplicates:
+          type: integer
+          minimum: 0
+          maximum: 500
+          description: Lecturas cuyo `client_read_id` ya existía (envío previo o repetido dentro del lote). Éxito idempotente.
+        duplicate_client_read_ids:
+          type: array
+          maxItems: 500
+          items:
+            type: string
+            format: uuid
+        rejected:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/RfidReadRejection'
+    RfidReadRejection:
+      type: object
+      additionalProperties: false
+      required: [index, code]
+      properties:
+        index:
+          type: integer
+          minimum: 0
+          maximum: 499
+          description: Posición (base 0) de la lectura dentro de `reads`.
+        client_read_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          enum:
+            - INVALID_EPC
+            - INVALID_TID
+            - RSSI_OUT_OF_RANGE
+            - UNKNOWN_ANTENNA
+            - READ_AT_IN_FUTURE
+            - READ_AT_TOO_OLD
+            - CLIENT_READ_ID_CONFLICT
+          description: |
+            INVALID_EPC / INVALID_TID: formato hexadecimal o longitud inválida.
+            RSSI_OUT_OF_RANGE: fuera de [-120, 0] dBm.
+            UNKNOWN_ANTENNA: el puerto no está registrado o activo para ese lector.
+            READ_AT_IN_FUTURE: más de 5 min por delante del servidor (revisar reloj del celular).
+            READ_AT_TOO_OLD: más de 7 días de antigüedad.
+            CLIENT_READ_ID_CONFLICT: el `client_read_id` ya existe con otro EPC, antena o `read_at`.
+        detail:
+          type: string
+          maxLength: 300
+          description: Texto legible. Nunca contiene el EPC ni el TID completos.
+    Liveness:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: UP
+    WarehouseListPage:
+      type: object
+      required: [data]
+      description: |
+        Sobre `{ "data": [...] }` del listado M2 (`internal/warehouse/handler.go:155`), compatible con el web.
+        `next_cursor` es parte del contrato objetivo; hoy la API no lo envía (tratar su ausencia como `null`).
+      properties:
+        data:
+          type: array
+          description: Siempre array en el contrato objetivo. Hoy llega `null` si la lista está vacía (tratar como `[]`).
+          items:
+            $ref: '#/components/schemas/WarehouseSummary'
+        next_cursor:
+          type: [string, 'null']
+          description: Cursor de la página siguiente, o `null` si es la última o si no se pidió paginación.
+    WarehouseSummary:
+      type: object
+      required: [id, code, name]
+      additionalProperties: true
+      description: |
+        Campos que usa la app. La API devuelve hoy el objeto `Warehouse` completo
+        (`internal/warehouse/models.go:10-22`: también `tenant_id`, `description`, `width`, `height`,
+        `depth`, `created_at`, `updated_at`); el cliente debe ignorar los campos que no conoce.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: '`warehouse.warehouses.id`; es el `warehouse_id` de los lotes y el `{id}` del directorio.'
+        code:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Código de la bodega (`VARCHAR(50)`, único por tenant).
+          examples: [BOG-01]
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Nombre legible (`VARCHAR(255)`).
+          examples: [Centro de distribución Bogotá]
+        status:
+          type: string
+          description: '`ACTIVE` o `INACTIVE` (`VARCHAR(20)`, por defecto `ACTIVE`). Opcional para la app.'
+          examples: [ACTIVE]
+    LocationDirectoryPage:
+      type: object
+      additionalProperties: false
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/LocationDirectoryEntry'
+        next_cursor:
+          type: [string, 'null']
+          description: Cursor de la página siguiente, o `null` si es la última.
+    LocationDirectoryEntry:
+      type: object
+      additionalProperties: false
+      required: [id, code, name, label_epc]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: '`warehouse.locations.id`; es el valor a enviar como `location_id`.'
+        code:
+          type: string
+          maxLength: 50
+          description: Código de la ubicación (`warehouse.locations.code`, único por bodega).
+          examples: [A01-01-01]
+        name:
+          type: string
+          maxLength: 300
+          description: |
+            Nombre legible armado por la API con la jerarquía (zona, rack, nivel) y el código, porque
+            `warehouse.locations` no tiene columna de nombre. Solo para mostrar.
+          examples: [Zona A · Rack 01 · Nivel 01 · A01-01-01]
+        label_epc:
+          type: [string, 'null']
+          minLength: 16
+          maxLength: 124
+          pattern: '^([0-9A-F]{4}){4,31}$'
+          description: |
+            EPC de la etiqueta RFID del bin, en hexadecimal en MAYÚSCULAS, o `null` si la ubicación no tiene
+            etiqueta mapeada. Único por tenant.
+          examples: [E28068940000501EC0B1D2E3]
+    Problem:
+      type: object
+      description: RFC 9457 Problem Details (`application/problem+json`). Campos base del repo + extensiones.
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          examples: [https://errors.wms-enterprise.com/rfid/reader-not-registered]
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        code:
+          type: string
+          description: Código estable legible por máquina (extensión).
+          examples: [READER_NOT_REGISTERED]
+        correlation_id:
+          type: string
+          description: Igual que la cabecera X-Correlation-ID (extensión).
+        errors:
+          type: array
+          description: Detalle de validación estructural (solo 400).
+          maxItems: 50
+          items:
+            type: object
+            required: [pointer, message]
+            properties:
+              pointer:
+                type: string
+                description: JSON Pointer (RFC 6901) al campo inválido.
+                examples: [/reads/3/client_read_id]
+              message:
+                type: string
+  responses:
+    BadRequest:
+      description: Error estructural del lote (JSON inválido, campo obligatorio ausente, tipo incorrecto, más de 500 lecturas).
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/rfid/invalid-batch
+            title: Bad Request
+            status: 400
+            detail: El lote no cumple el esquema RfidReadBatch.
+            instance: /api/v1/rfid/read-batches
+            code: INVALID_BATCH
+            correlation_id: 3f1c2b7e-9a41-4d0e-8c55-2f7d6a1b9e10
+            errors:
+              - pointer: /reads/3/client_read_id
+                message: debe ser un UUID
+    BadQuery:
+      description: Parámetro inválido (`id` no UUID, `limit` fuera de rango, `code` o `cursor` mal formados).
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/warehouse
+            title: Bad Request
+            status: 400
+            detail: limit must be between 1 and 500
+            instance: /api/v1/warehouse/warehouses/7c9e6679-7425-40de-944b-e07fc1f90ae7/location-directory
+    WarehouseListBadQuery:
+      description: |
+        `limit` fuera de 1-500 o `cursor` mal formado o caducado (contrato objetivo; hoy la API ignora ambos).
+        También lo devuelve hoy `iam.RequirePermission` si la query trae `warehouse_id` e `id` contradictorios
+        (`internal/iam/middleware.go:150-158`); la app no debe enviar esos parámetros.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/warehouse
+            title: Bad Request
+            status: 400
+            detail: limit must be between 1 and 500
+            instance: /api/v1/warehouse/warehouses
+    WarehouseListForbidden:
+      description: |
+        Sin membresía activa ni identidad técnica en el tenant (`internal/iam/middleware.go:107-109`) o sin
+        `warehouse:view` en ninguna bodega ni de forma global (`internal/iam/middleware.go:174-176`,
+        `internal/iam/models.go:80-110`). Un usuario con permiso pero sin bodegas accesibles recibe 200 con
+        `data` vacío, no 403.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/forbidden
+            title: Forbidden
+            status: 403
+            detail: 'Forbidden: Insufficient privileges for this operation'
+            instance: /api/v1/warehouse/warehouses
+    WarehouseForbidden:
+      description: Sin membresía activa, sin permiso `warehouse:view` o sin acceso a la bodega `{id}`.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/warehouse
+            title: Forbidden
+            status: 403
+            detail: 'Forbidden: User not authorized for this warehouse'
+            instance: /api/v1/warehouse/warehouses/7c9e6679-7425-40de-944b-e07fc1f90ae7/location-directory
+    DirectoryWarehouseNotFound:
+      description: La bodega `{id}` no existe en el tenant del usuario (RLS).
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/warehouse
+            title: Not Found
+            status: 404
+            detail: Warehouse not found
+            instance: /api/v1/warehouse/warehouses/7c9e6679-7425-40de-944b-e07fc1f90ae7/location-directory
+            code: WAREHOUSE_NOT_FOUND
+    Unauthorized:
+      description: Token ausente, inválido, vencido, con audiencia distinta de `wms-api` o `azp` no permitido.
+      headers:
+        WWW-Authenticate:
+          $ref: '#/components/headers/WWWAuthenticate'
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/unauthorized
+            title: Unauthorized
+            status: 401
+            detail: Invalid, expired or unauthorized token
+            instance: /api/v1/rfid/read-batches
+      x-client-behavior: Hacer refresh del token y reintentar una sola vez; si el refresh falla, volver al login.
+    Forbidden:
+      description: Sin membresía activa, sin permiso `rfid:reads:write` o sin acceso a la bodega indicada.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/rfid/forbidden
+            title: Forbidden
+            status: 403
+            detail: User is not authorized to submit RFID reads for the requested warehouse
+            instance: /api/v1/rfid/read-batches
+            code: WAREHOUSE_ACCESS_DENIED
+    WarehouseNotFound:
+      description: '`warehouse_id` o `location_id` no existe en el tenant del usuario (RLS).'
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/rfid/warehouse-not-found
+            title: Not Found
+            status: 404
+            detail: Warehouse not found in tenant
+            instance: /api/v1/rfid/read-batches
+            code: WAREHOUSE_NOT_FOUND
+    IdempotencyConflict:
+      description: '`Idempotency-Key` reutilizada con un body distinto.'
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/rfid/idempotency-conflict
+            title: Conflict
+            status: 409
+            detail: Idempotency-Key reused with a different payload
+            instance: /api/v1/rfid/read-batches
+            code: IDEMPOTENCY_KEY_REUSED
+    PayloadTooLarge:
+      description: Body mayor de 512 KiB.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/rfid/payload-too-large
+            title: Content Too Large
+            status: 413
+            detail: Request body exceeds 524288 bytes
+            instance: /api/v1/rfid/read-batches
+            code: PAYLOAD_TOO_LARGE
+    UnsupportedMediaType:
+      description: Content-Type distinto de `application/json`.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    UnprocessableReader:
+      description: |
+        Regla de negocio a nivel de lote. Códigos: `READER_NOT_REGISTERED` (serial desconocido en el tenant),
+        `READER_INACTIVE` (estado distinto de ACTIVE), `READER_WAREHOUSE_MISMATCH` (el lector está asignado a
+        otra bodega), `LOCATION_NOT_IN_WAREHOUSE`.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/rfid/reader-not-registered
+            title: Unprocessable Content
+            status: 422
+            detail: Reader NA72512130766 is not registered in this tenant; ask an administrator to register it
+            instance: /api/v1/rfid/read-batches
+            code: READER_NOT_REGISTERED
+    TooManyRequests:
+      description: |
+        Cuota superada. Límites por defecto (aprobados; configurables en el servidor por variable de
+        entorno): 60 peticiones/min por usuario, 30 peticiones/min y 6.000 lecturas/min por lector,
+        600 peticiones/min por tenant. Respetar siempre `Retry-After`.
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+        RateLimit-Policy:
+          $ref: '#/components/headers/RateLimitPolicy'
+        RateLimit:
+          $ref: '#/components/headers/RateLimit'
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://errors.wms-enterprise.com/rfid/rate-limited
+            title: Too Many Requests
+            status: 429
+            detail: Per-reader request quota exceeded
+            instance: /api/v1/rfid/read-batches
+            code: RATE_LIMITED
+    InternalError:
+      description: Error interno. Reintentar con backoff exponencial y el mismo `client_read_id` / `Idempotency-Key`.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: Dependencia no disponible (p. ej. PostgreSQL). Reintentar más tarde.
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+        X-Correlation-ID:
+          $ref: '#/components/headers/XCorrelationId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  examples:
+    WarehouseListPage:
+      summary: Primera página con limit=2 (usuario con acceso a 3 bodegas)
+      value:
+        data:
+          - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+            code: BOG-01
+            name: Centro de distribución Bogotá
+            status: ACTIVE
+          - id: 8d0f778a-8536-41ef-a55c-f18fd2fa1bf8
+            code: MDE-01
+            name: Bodega Medellín
+            status: INACTIVE
+        next_cursor: eyJjb2RlIjoiTURFLTAxIn0
+    WarehouseListFull:
+      summary: Sin paginación (respuesta de hoy, objeto Warehouse completo; la app ignora los campos extra)
+      value:
+        data:
+          - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+            tenant_id: 11111111-2222-4333-8444-555555555555
+            code: BOG-01
+            name: Centro de distribución Bogotá
+            description: ''
+            width: 120
+            height: 12
+            depth: 80
+            status: ACTIVE
+            created_at: '2026-11-01T14:00:00Z'
+            updated_at: '2026-11-01T14:00:00Z'
+    LocationDirectoryPage:
+      summary: Primera página filtrada por code=A01-01 (una ubicación sin etiqueta RFID)
+      value:
+        data:
+          - id: 2b1e4c3a-5d6f-4a7b-8c9d-0e1f2a3b4c5d
+            code: A01-01-01
+            name: Zona A · Rack 01 · Nivel 01 · A01-01-01
+            label_epc: E28068940000501EC0B1D2E3
+          - id: 3c2f5d4b-6e7a-4b8c-9d0e-1f2a3b4c5d6e
+            code: A01-01-02
+            name: Zona A · Rack 01 · Nivel 01 · A01-01-02
+            label_epc: null
+        next_cursor: eyJjb2RlIjoiQTAxLTAxLTAyIn0
+    BatchNA72512130766:
+      summary: Lote de 3 lecturas del lector NA72512130766 (Geenfc A7)
+      value:
+        warehouse_id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        reader_id: NA72512130766
+        location_id: 2b1e4c3a-5d6f-4a7b-8c9d-0e1f2a3b4c5d
+        app:
+          name: cubip-scan
+          version: 1.4.0+27
+          platform: android
+        reads:
+          - client_read_id: 9b2f4c1e-7a3d-4e8f-9c0b-1d2e3f4a5b6c
+            epc: E28011700000020F1A2B3C4D
+            tid: E2801170200040A1B2C3
+            rssi_dbm: -54.5
+            antenna: 1
+            read_at: '2026-11-19T22:41:07.215Z'
+          - client_read_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+            epc: e28011700000020f1a2b3c4e
+            rssi_dbm: -61
+            antenna: 1
+            read_at: '2026-11-19T17:41:07.480-05:00'
+          - client_read_id: 4f5e6d7c-8b9a-4c0d-9e1f-2a3b4c5d6e7f
+            epc: E28011700000020F1A2B3C4F
+            rssi_dbm: -72.25
+            antenna: 1
+            read_at: '2026-11-19T22:41:08.002Z'
+    AcceptedPartial:
+      summary: Reintento del lote anterior con un error en la app (una aceptada, una duplicada y una en conflicto)
+      value:
+        batch_id: 5d7e8f90-1a2b-4c3d-8e4f-5a6b7c8d9e0f
+        warehouse_id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        reader_id: NA72512130766
+        received_at: '2026-11-19T22:41:09.120Z'
+        accepted: 1
+        duplicates: 1
+        duplicate_client_read_ids:
+          - 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        rejected:
+          - index: 2
+            client_read_id: 4f5e6d7c-8b9a-4c0d-9e1f-2a3b4c5d6e7f
+            code: CLIENT_READ_ID_CONFLICT
+            detail: El client_read_id ya existe con otro EPC o read_at

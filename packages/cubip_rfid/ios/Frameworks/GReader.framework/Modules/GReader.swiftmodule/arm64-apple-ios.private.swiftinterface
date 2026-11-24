@@ -1,0 +1,1204 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.0 effective-5.10 (swiftlang-6.0.0.9.10 clang-1600.0.26.2)
+// swift-module-flags: -target arm64-apple-ios12.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-bare-slash-regex -module-name GReader
+import CoreBluetooth
+import Foundation
+@_exported import GReader
+import Swift
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+@_hasMissingDesignatedInitializers public class MsgBaseKillGjb : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var filter: GReader.ParamGjbFilter!
+  public var hexPassword: Swift.String
+  public var safeCertificationFlag: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBase6dOver : GReader.Message {
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppReset : GReader.Message {
+  public init()
+  public func getClassName() -> Swift.String
+  public init(data: [Swift.UInt8])
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseWriteGb : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var area: Swift.Int
+  public var start: Swift.Int
+  public var hexWriteData: Swift.String
+  public var filter: GReader.ParamGbFilter!
+  public var hexPassword: Swift.String!
+  public var safeCertificationFlag: Swift.Int
+  public var fdMicrochipInitMode: Swift.Int
+  public var stayCarrierWave: Swift.Int
+  public var errorIndex: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamGbReadTid : GReader.Parameter {
+  public var mode: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(mode: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class Param6BReadUserdata : GReader.Parameter {
+  public var start: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(start: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseInventoryEpc : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var inventoryMode: Swift.Int
+  public var filter: GReader.ParamEpcFilter!
+  public var readTid: GReader.ParamEpcReadTid!
+  public var readUserdata: GReader.ParamEpcReadUserdata!
+  public var readReserved: GReader.ParamEpcReadReserved!
+  public var hexPassword: Swift.String!
+  public var monzaQtPeek: Swift.Int!
+  public var rfmicron: Swift.Int!
+  public var emSensor: Swift.Int!
+  public var readEpcBank: GReader.ParamEpcReadEpcBank!
+  public var paramFastId: GReader.ParamEpcFastId!
+  public var ctesius: Swift.Int!
+  public var quanray: Swift.Int!
+  public var timeout: Swift.Int!
+  public var EPC_2V2_Authenticate: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  public init(data: [Swift.UInt8])
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBaseGbOver : GReader.Message {
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamEncipheredData : GReader.Parameter {
+  public var bitLength: Swift.Int
+  public var hexData: Swift.String
+  public init()
+  public init(bitLength: Swift.Int, hexData: Swift.String)
+  public func toBytes() -> [Swift.UInt8]
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamEpcFilter : GReader.Parameter {
+  public var area: Swift.Int
+  public var bitStart: Swift.Int
+  public var bitLength: Swift.Int
+  public var hexData: Swift.String
+  public init()
+  public init(area: Swift.Int, bitStart: Swift.Int, bitLength: Swift.Int, hexData: Swift.String)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamGjbFilter : GReader.Parameter {
+  public var area: Swift.Int
+  public var bitStart: Swift.Int
+  public var bitLength: Swift.Int
+  public var hexData: Swift.String
+  public init()
+  public init(area: Swift.Int, bitStart: Swift.Int, bitLength: Swift.Int, hexData: Swift.String)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgTestCarrierWave : GReader.Message {
+  public var antennaNum: Swift.Int
+  public var freqCursor: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseLockEpc : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var area: Swift.Int
+  public var mode: Swift.Int
+  public var filter: GReader.ParamEpcFilter!
+  public var hexPassword: Swift.String
+  public var u9Permalock: Swift.Int
+  public var lockMask: Swift.Int
+  public var lockAction: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@objc public class DeviceInfo : ObjectiveC.NSObject {
+  public var id: Swift.String
+  public var name: Swift.String
+  public var rssi: Swift.Int
+  public var gPeripheral: CoreBluetooth.CBPeripheral!
+  public init(id: Swift.String, name: Swift.String, rssi: Swift.Int)
+  public init(peripheral: CoreBluetooth.CBPeripheral, rssi: Swift.Int)
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class GBleDevice : GReader.CommunicationInterface {
+  public var gble: GReader.GBleManager!
+  public var gPeripheral: CoreBluetooth.CBPeripheral!
+  public init(gble: GReader.GBleManager, gPeripheral: CoreBluetooth.CBPeripheral)
+  public func setDataDispose()
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class Parameter {
+  @objc deinit
+}
+@objc @_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class GBleManager : ObjectiveC.NSObject, CoreBluetooth.CBCentralManagerDelegate, CoreBluetooth.CBPeripheralDelegate {
+  public static let instance: GReader.GBleManager
+  public func getGCBCentralManager() -> CoreBluetooth.CBCentralManager
+  public func getGCBPeripheral() -> CoreBluetooth.CBPeripheral
+  public func setGCBPeripheral(peripheral: CoreBluetooth.CBPeripheral)
+  public func getGBLEDeviceServiceUUID() -> Swift.String
+  public func setGBLEDeviceServiceUUID(serviceUUID: Swift.String)
+  public func getGPeripheralCharacteristicWriteUUID() -> Swift.String
+  public func setGPeripheralCharacteristicWriteUUID(peripheralCharacteristicWriteUUID: Swift.String)
+  public func getGPeripheralCharacteristicWrite() -> CoreBluetooth.CBCharacteristic
+  public func setGPeripheralCharacteristicWrite(peripheralCharacteristicWrite: CoreBluetooth.CBCharacteristic)
+  public func onBluetoothAdapterStateChange(cb: @escaping (Swift.Bool, Swift.Int, Swift.String) -> Swift.Void)
+  public func openBluetoothAdapter()
+  @objc public func centralManagerDidUpdateState(_ central: CoreBluetooth.CBCentralManager)
+  public func onBluetoothDevicePeripheral(cb: @escaping (CoreBluetooth.CBPeripheral, Swift.Int) -> Swift.Void)
+  public func onBluetoothDeviceFound(cb: @escaping (Swift.String, Swift.String, Swift.Int) -> Swift.Void)
+  public func startBluetoothDevicesDiscovery()
+  public func stopBluetoothDevicesDiscovery()
+  @objc public func centralManager(_ central: CoreBluetooth.CBCentralManager, didDiscover peripheral: CoreBluetooth.CBPeripheral, advertisementData: [Swift.String : Any], rssi RSSI: Foundation.NSNumber)
+  public func onBLEConnectionStateChange(cb: @escaping (Swift.Bool, Swift.Int, Swift.String) -> Swift.Void)
+  public func createBLEConnection()
+  public func createBLEConnection(uuid: Swift.String)
+  public func createBLEConnection(name: Swift.String)
+  public func closeBLEConnection()
+  @objc public func centralManager(_ central: CoreBluetooth.CBCentralManager, didConnect peripheral: CoreBluetooth.CBPeripheral)
+  @objc public func centralManager(_ central: CoreBluetooth.CBCentralManager, didFailToConnect peripheral: CoreBluetooth.CBPeripheral, error: (any Swift.Error)?)
+  @objc public func centralManager(_ central: CoreBluetooth.CBCentralManager, didDisconnectPeripheral peripheral: CoreBluetooth.CBPeripheral, error: (any Swift.Error)?)
+  public func getBLEDeviceServices(cb: @escaping ([CoreBluetooth.CBService]) -> Swift.Void)
+  @objc public func peripheral(_ peripheral: CoreBluetooth.CBPeripheral, didDiscoverServices error: (any Swift.Error)?)
+  public func getBLEDeviceCharacteristics(service: CoreBluetooth.CBService, cb: @escaping ([CoreBluetooth.CBCharacteristic]) -> Swift.Void)
+  @objc public func peripheral(_ peripheral: CoreBluetooth.CBPeripheral, didDiscoverCharacteristicsFor service: CoreBluetooth.CBService, error: (any Swift.Error)?)
+  public func notifyBLECharacteristicValueChange(characteristic: CoreBluetooth.CBCharacteristic)
+  public func onBLECharacteristicValueChange(cb: @escaping (Swift.String, Swift.String) -> Swift.Void)
+  @objc public func peripheral(_ peripheral: CoreBluetooth.CBPeripheral, didUpdateValueFor characteristic: CoreBluetooth.CBCharacteristic, error: (any Swift.Error)?)
+  public func _writeBLECharacteristicValue(data: Foundation.Data)
+  public func writeBLECharacteristicValue(data: Swift.String, isHex: Swift.Bool)
+  @objc deinit
+}
+public class GClient {
+  public var name: Swift.String
+  public var serialName: Swift.String
+  public var isPrint: Swift.Bool
+  public var isOpen: Swift.Bool
+  public var initParam: Swift.String
+  public init()
+  public func getConnectType() -> Swift.Int
+  public func setSendHeartbeat(isSendHeartbeat: Swift.Bool)
+  public func setPrint(isPrint: Swift.Bool)
+  public func onTagEpcLog(cb: @escaping (Swift.String, GReader.LogBaseEpcInfo) -> Swift.Void)
+  public func onTagEpcOver(cb: @escaping (Swift.String, GReader.LogBaseEpcOver) -> Swift.Void)
+  public func onTag6bLog(cb: @escaping (Swift.String, GReader.LogBase6bInfo) -> Swift.Void)
+  public func onTag6bOver(cb: @escaping (Swift.String, GReader.LogBase6bOver) -> Swift.Void)
+  public func onTagGbLog(cb: @escaping (Swift.String, GReader.LogBaseGbInfo) -> Swift.Void)
+  public func onTagGbOver(cb: @escaping (Swift.String, GReader.LogBaseGbOver) -> Swift.Void)
+  public func onTagGbSafeParam(cb: @escaping (Swift.String, GReader.LogBaseGbSafeParam) -> Swift.Void)
+  public func onTagGjbLog(cb: @escaping (Swift.String, GReader.LogBaseGjbInfo) -> Swift.Void)
+  public func onTagGjbOver(cb: @escaping (Swift.String, GReader.LogBaseGjbOver) -> Swift.Void)
+  public func onTagTLLog(cb: @escaping (Swift.String, GReader.LogBaseTLInfo) -> Swift.Void)
+  public func onTagTLOver(cb: @escaping (Swift.String, GReader.LogBaseTLOver) -> Swift.Void)
+  public func onGpiStart(cb: @escaping (Swift.String, GReader.LogAppGpiStart) -> Swift.Void)
+  public func onGpiOver(cb: @escaping (Swift.String, GReader.LogAppGpiOver) -> Swift.Void)
+  public func sendDebugLog(cb: @escaping (Swift.String) -> Swift.Void)
+  public func receiveDebugLog(cb: @escaping (Swift.String) -> Swift.Void)
+  public func onBLEConnect(cb: @escaping (Swift.String, Swift.Int, Swift.String) -> Swift.Void)
+  public func onBLEDisconnect(cb: @escaping (Swift.String, Swift.String) -> Swift.Void)
+  public func openBleClient(gBleDevice: GReader.GBleDevice) -> Swift.Bool
+  public func close() -> Swift.Bool
+  public func sendAsyncMsg(msg: GReader.Message, callback: @escaping (GReader.Message) -> Swift.Void, timeout: Swift.Int)
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamEpcReadEpcBank : GReader.Parameter {
+  public var start: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(start: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppSetGpiTrigger : GReader.Message {
+  public var gpiPort: Swift.Int
+  public var triggerStart: Swift.Int
+  public var hexTriggerCommand: Swift.String
+  public var triggerOver: Swift.Int
+  public var overDelayTime: Swift.Int
+  public var levelUploadSwitch: Swift.Int
+  public var antiShakeTime: Swift.Int
+  public init()
+  public init(data: [Swift.UInt8])
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class LogBase6dInfo : GReader.Message {
+  public var epc: Swift.String
+  public var antId: Swift.Int
+  public var rssi: Swift.Int
+  public var childAntId: Swift.Int
+  public var strUtc: Swift.String
+  public var frequencyPoint: Swift.Int
+  public var phase: Swift.Int
+  public var rssidBm: Swift.Int
+  public var replySerialNumber: Swift.Int
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBase6bOver : GReader.Message {
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseLock6B : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var hexMatchTid: Swift.String
+  public var lockIndex: Swift.Int
+  public var errorIndex: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamGbReadUserdata : GReader.Parameter {
+  public var childArea: Swift.Int
+  public var start: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(childArea: Swift.Int, start: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBaseGbSafeParam : GReader.Message {
+  public var antId: Swift.Int
+  public var safeParam: Swift.Int!
+  public var tagIdentifier: Swift.Int!
+  public var random: Swift.Int!
+  public var token2: Swift.Int!
+  public var encipheredData: GReader.ParamEncipheredData!
+  public var readerSerialNumber: Swift.String!
+  public init()
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamGjbReadEpcBank : GReader.Parameter {
+  public var start: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(start: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppSetSerialParam : GReader.Message {
+  public var serialBaudrate: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBaseEpcOver : GReader.Message {
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgType {
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseGetEpcBaseband : GReader.Message {
+  public var baseSpeed: Swift.Int
+  public var qValue: Swift.Int
+  public var session: Swift.Int
+  public var inventoryFlag: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseKillGb : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var filter: GReader.ParamGbFilter!
+  public var hexPassword: Swift.String
+  public var safeCertificationFlag: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgTestVSWRCheck : GReader.Message {
+  public var preValue: Swift.Int
+  public var sufValue: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+public func bytesToHexString(_ bytes: [Swift.UInt8]) -> Swift.String
+public func dataToHexString(_ data: Foundation.Data) -> Swift.String
+public func binStrToHexStr(_ binaryStr: Swift.String) -> Swift.String
+public func hexStrToBytes(_ hexStr: Swift.String) -> [Swift.UInt8]
+public func hexStrToData(_ hexStr: Swift.String) -> Foundation.Data
+public func hexStringToInt(_ hexString: Swift.String) -> Swift.Int
+public func intToUInt8Array(_ value: Swift.Int) -> [Swift.UInt8]
+public func fillDataLen(_ dataLen: Swift.Int) -> Swift.String
+@_hasMissingDesignatedInitializers public class LogAppGpiStart : GReader.Message {
+  public var gpiPort: Swift.Int
+  public var gpiPortLevel: Swift.Int
+  public var systemTimeSecond: Swift.Int
+  public var systemTimeUSecond: Swift.Int
+  public var systemTime: Swift.String
+  public var readerSerialNumber: Swift.String
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppGetBaseVersion : GReader.Message {
+  public var baseVersion: Swift.String
+  public init()
+  public init(data: [Swift.UInt8])
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseLockGb : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var area: Swift.Int
+  public var lockParam: Swift.Int
+  public var filter: GReader.ParamGbFilter!
+  public var hexPassword: Swift.String
+  public var safeCertificationFlag: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseEraseEpc : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var area: Swift.Int
+  public var start: Swift.Int
+  public var length: Swift.Int
+  public var filter: GReader.ParamEpcFilter!
+  public var hexPassword: Swift.String!
+  public var block: Swift.Int!
+  public var stayCarrierWave: Swift.Int!
+  public var errorIndex: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseSetTagLog : GReader.Message {
+  public var repeatedTime: Swift.Int
+  public var rssiTV: Swift.Int
+  public var powerDownSave: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppSetGpo : GReader.Message {
+  public var gpo1: Swift.Int
+  public var gpo2: Swift.Int
+  public var gpo3: Swift.Int
+  public var gpo4: Swift.Int
+  public var gpo5: Swift.Int
+  public var gpo6: Swift.Int
+  public var gpo7: Swift.Int
+  public var gpo8: Swift.Int
+  public var gpo9: Swift.Int
+  public var gpo10: Swift.Int
+  public var gpo11: Swift.Int
+  public var gpo12: Swift.Int
+  public var gpo13: Swift.Int
+  public var gpo14: Swift.Int
+  public var gpo15: Swift.Int
+  public var gpo16: Swift.Int
+  public var gpo17: Swift.Int
+  public var gpo18: Swift.Int
+  public var gpo19: Swift.Int
+  public var gpo20: Swift.Int
+  public var gpo21: Swift.Int
+  public var gpo22: Swift.Int
+  public var gpo23: Swift.Int
+  public var gpo24: Swift.Int
+  public var gpo25: Swift.Int
+  public var gpo26: Swift.Int
+  public var gpo27: Swift.Int
+  public var gpo28: Swift.Int
+  public var gpo29: Swift.Int
+  public var gpo30: Swift.Int
+  public var gpo31: Swift.Int
+  public var gpo32: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseInventoryTL : GReader.Message {
+  public var tagType: Swift.Int
+  public var antennaEnable: Swift.Int
+  public var inventoryMode: Swift.Int
+  public var timeout: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseWrite6B : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var hexMatchTid: Swift.String
+  public var start: Swift.Int
+  public var hexWriteData: Swift.String
+  public var errorIndex: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseSetAutoDormancy : GReader.Message {
+  public var onOff: Swift.Int
+  public var freeTime: Swift.Int
+  public var readTime: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseLockGet6B : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var hexMatchTid: Swift.String
+  public var lockIndex: Swift.Int
+  public var lockState: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppUsbKeyboard : GReader.Message {
+  public var operationType: Swift.Int
+  public var reportType: Swift.Int
+  public var encodingMethod: Swift.Int
+  public var prefix: Swift.String
+  public var suffix: Swift.String
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBaseTLOver : GReader.Message {
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseStop : GReader.Message {
+  public init()
+  public init(data: [Swift.UInt8])
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamGbReadEpcBank : GReader.Parameter {
+  public var start: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(start: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamEpcReadUserdata : GReader.Parameter {
+  public var start: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(start: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBase6bInfo : GReader.Message {
+  public var tid: Swift.String
+  public var antId: Swift.Int
+  public var rssi: Swift.Int
+  public var result: Swift.Int
+  public var userdata: Swift.String
+  public var readerSerialNumber: Swift.String
+  public init()
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class Message {
+  public func getRtCode() -> Swift.Int
+  public func getRtMsg() -> Swift.String
+  public func setRtMsg(rtmsg: Swift.String)
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogAppGpiOver : GReader.Message {
+  public var gpiPort: Swift.Int
+  public var gpiPortLevel: Swift.Int
+  public var systemTimeSecond: Swift.Int
+  public var systemTimeUSecond: Swift.Int
+  public var systemTime: Swift.String
+  public var readerSerialNumber: Swift.String
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseSetResidenceTime : GReader.Message {
+  public var antResidenceTime: Swift.Int
+  public var pointResidenceTime: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseKillEpc : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var filter: GReader.ParamEpcFilter!
+  public var hexPassword: Swift.String
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppGetGpiTrigger : GReader.Message {
+  public var gpiPort: Swift.Int
+  public var triggerStart: Swift.Int
+  public var hexTriggerCommand: Swift.String
+  public var triggerOver: Swift.Int
+  public var overDelayTime: Swift.Int
+  public var levelUploadSwitch: Swift.Int
+  public var antiShakeTime: Swift.Int
+  public init()
+  public init(data: [Swift.UInt8])
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseGetFrequency : GReader.Message {
+  public var automatically: Swift.Bool
+  public var freqIndexArray: [Swift.Int]
+  public var readOrWrite: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseGetPower : GReader.Message {
+  public var dicPower: [Swift.Int : Swift.Int]
+  public var readOrWrite: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamGbFilter : GReader.Parameter {
+  public var area: Swift.Int
+  public var bitStart: Swift.Int
+  public var bitLength: Swift.Int
+  public var hexData: Swift.String
+  public init()
+  public init(area: Swift.Int, bitStart: Swift.Int, bitLength: Swift.Int, hexData: Swift.String)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseInventoryGb : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var inventoryMode: Swift.Int
+  public var filter: GReader.ParamGbFilter!
+  public var readTid: GReader.ParamGbReadTid!
+  public var readUserdata: GReader.ParamGbReadUserdata!
+  public var hexPassword: Swift.String!
+  public var safeCertificationFlag: Swift.Int
+  public var readEpcBank: GReader.ParamGbReadEpcBank!
+  public var timeout: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseInventoryGjb : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var inventoryMode: Swift.Int
+  public var filter: GReader.ParamGjbFilter!
+  public var readTid: GReader.ParamGjbReadTid!
+  public var readUserdata: GReader.ParamGjbReadUserdata!
+  public var hexPassword: Swift.String!
+  public var safeCertificationFlag: Swift.Int
+  public var readEpcBank: GReader.ParamGjbReadEpcBank!
+  public var timeout: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseWriteEpc : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var area: Swift.Int
+  public var start: Swift.Int
+  public var hexWriteData: Swift.String
+  public var filter: GReader.ParamEpcFilter!
+  public var hexPassword: Swift.String!
+  public var block: Swift.Int!
+  public var stayCarrierWave: Swift.Int!
+  public var errorIndex: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseInventory6D : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var inventoryMode: Swift.Int
+  public var timeout: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppGetReaderInfo : GReader.Message {
+  public var readerSerialNumber: Swift.String
+  public var powerOnTime: Swift.Int
+  public var baseCompileTime: Swift.String
+  public var appVersion: Swift.String
+  public var systemVersion: Swift.String
+  public var appCompileTime: Swift.String
+  public var basebandOnTime: Swift.Int
+  public var workModePwd: Swift.Int
+  public var workModeRead: Swift.Int
+  public var workModeUp: Swift.Int
+  public init()
+  public init(data: [Swift.UInt8])
+  public func getClassName() -> Swift.String
+  public func getFormatPowerOnTime() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class CommunicationInterface {
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseGetFreqRange : GReader.Message {
+  public var freqRangeIndex: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBaseGjbInfo : GReader.Message {
+  public var epc: Swift.String
+  public var pc: Swift.String
+  public var antId: Swift.Int
+  public var rssi: Swift.Int
+  public var result: Swift.Int
+  public var tid: Swift.String
+  public var userdata: Swift.String
+  public var frequencyPoint: Swift.Int
+  public var phase: Swift.Int
+  public var epcBankData: Swift.String
+  public var readerSerialNumber: Swift.String
+  public init()
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseGetResidenceTime : GReader.Message {
+  public var antResidenceTime: Swift.Int
+  public var pointResidenceTime: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseGetCapabilities : GReader.Message {
+  public var minPower: Swift.Int
+  public var maxPower: Swift.Int
+  public var antennaCount: Swift.Int
+  public var frequencyArray: [Swift.Int]
+  public var protocolArray: [Swift.Int]
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppGetGpiState : GReader.Message {
+  public var hpGpiState: [Swift.Int : Swift.Int]
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppGetSerialParam : GReader.Message {
+  public var serialBaudrate: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBaseGjbOver : GReader.Message {
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamEpcReadReserved : GReader.Parameter {
+  public var start: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(start: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamGjbReadUserdata : GReader.Parameter {
+  public var start: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(start: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseSetEpcBaseband : GReader.Message {
+  public var baseSpeed: Swift.Int
+  public var qValue: Swift.Int
+  public var session: Swift.Int
+  public var inventoryFlag: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgAppRestoreDefault : GReader.Message {
+  public init()
+  public init(data: [Swift.UInt8])
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamGjbReadTid : GReader.Parameter {
+  public var mode: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(mode: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBaseEpcInfo : GReader.Message {
+  public var epc: Swift.String
+  public var pc: Swift.String
+  public var antId: Swift.Int
+  public var rssi: Swift.Int
+  public var result: Swift.Int
+  public var tid: Swift.String
+  public var userdata: Swift.String
+  public var reserved: Swift.String
+  public var childAntId: Swift.Int
+  public var strUtc: Swift.String
+  public var frequencyPoint: Swift.Int
+  public var phase: Swift.Int
+  public var epcBankData: Swift.String
+  public var ctesiusLtu27: Swift.Int
+  public var ctesiusLtu31: Swift.Int
+  public var readerSerialNumber: Swift.String
+  public var replySerialNumber: Swift.Int
+  public var quanray: Swift.Int
+  public var rssidBm: Swift.Int
+  public var EPC_2V2_challenge: Swift.String
+  public var EPC_2V2_tag_response: Swift.String
+  public var iCRC: Swift.Int
+  public init()
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseSetFrequency : GReader.Message {
+  public var automatically: Swift.Bool
+  public var freqIndexArray: [Swift.Int]
+  public var powerDownSave: Swift.Int!
+  public var readOrWrite: Swift.Int!
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseGetTagLog : GReader.Message {
+  public var repeatedTime: Swift.Int
+  public var rssiTV: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamEpcReadTid : GReader.Parameter {
+  public var mode: Swift.Int
+  public var len: Swift.Int
+  public init()
+  public init(mode: Swift.Int, len: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class ParamEpcFastId : GReader.Parameter {
+  public var fastId: Swift.Int
+  public var tagFoucs: Swift.Int
+  public init()
+  public init(fastId: Swift.Int, tagFoucs: Swift.Int)
+  public init(data: [Swift.UInt8])
+  public func toBytes() -> [Swift.UInt8]
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class LogBaseGbInfo : GReader.Message {
+  public var epc: Swift.String
+  public var pc: Swift.String
+  public var antId: Swift.Int
+  public var rssi: Swift.Int
+  public var result: Swift.Int
+  public var tid: Swift.String
+  public var userdata: Swift.String
+  public var frequencyPoint: Swift.Int
+  public var phase: Swift.Int
+  public var epcBankData: Swift.String
+  public var readerSerialNumber: Swift.String
+  public init()
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseSetPower : GReader.Message {
+  public var dicPower: [Swift.Int : Swift.Int]
+  public var readOrWrite: Swift.Int!
+  public var powerDownSave: Swift.Int!
+  public init()
+  public init(data: [Swift.UInt8])
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseWriteGjb : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var area: Swift.Int
+  public var start: Swift.Int
+  public var hexWriteData: Swift.String
+  public var filter: GReader.ParamGjbFilter!
+  public var hexPassword: Swift.String!
+  public var safeCertificationFlag: Swift.Int
+  public var stayCarrierWave: Swift.Int
+  public var errorIndex: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseLockGjb : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var area: Swift.Int
+  public var lockParam: Swift.Int
+  public var filter: GReader.ParamGjbFilter!
+  public var hexPassword: Swift.String
+  public var safeCertificationFlag: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgUpgradeBaseband : GReader.Message {
+  public var packetNumber: Swift.Int
+  public var packetContent: [Swift.UInt8]
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseInventory6B : GReader.Message {
+  public var antennaEnable: Swift.Int
+  public var inventoryMode: Swift.Int
+  public var area: Swift.Int
+  public var readUserdata: GReader.Param6BReadUserdata!
+  public var hexMatchTid: Swift.String
+  public var timeout: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseSetFreqRange : GReader.Message {
+  public var freqRangeIndex: Swift.Int
+  public var powerDownSave: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class EnumG {
+  public static let MSG_TYPE_BIT_ERROR: Swift.String
+  public static let MSG_TYPE_BIT_APP: Swift.String
+  public static let MSG_TYPE_BIT_BASE: Swift.String
+  public static let MSG_TYPE_BIT_LOG: Swift.String
+  public static let MSG_TYPE_BIT_UPDATE: Swift.String
+  public static let MSG_TYPE_BIT_TEST: Swift.String
+  public static let ConnectType_Rs232: Swift.Int
+  public static let ConnectType_Rs485: Swift.Int
+  public static let ConnectType_TcpClient: Swift.Int
+  public static let ConnectType_TcpServer: Swift.Int
+  public static let ConnectType_Usb: Swift.Int
+  public static let ConnectType_Unknown: Swift.Int
+  public static let FrequencyRange_Gb920_925: Swift.Int
+  public static let FrequencyRange_Gb840_845: Swift.Int
+  public static let FrequencyRange_Gb840_845_920_925: Swift.Int
+  public static let FrequencyRange_FCC902_928: Swift.Int
+  public static let FrequencyRange_ETSI866_868: Swift.Int
+  public static let FrequencyRange_JP916_8_920_4: Swift.Int
+  public static let FrequencyRange_TW922_25_927_75: Swift.Int
+  public static let FrequencyRange_ID923_125_925_125: Swift.Int
+  public static let FrequencyRange_RUS866_6_867_4: Swift.Int
+  public static let InventoryMode_Single: Swift.Int
+  public static let InventoryMode_Inventory: Swift.Int
+  public static let LockMode_Unlock: Swift.Int
+  public static let LockMode_Lock: Swift.Int
+  public static let LockMode_PermanentUnlock: Swift.Int
+  public static let LockMode_PermanentLock: Swift.Int
+  public static let ReadMode6b_Tid: Swift.Int
+  public static let ReadMode6b_TidAndUserdata: Swift.Int
+  public static let ReadMode6b_Userdata: Swift.Int
+  public static let ParamFilterArea_EPC: Swift.Int
+  public static let ParamFilterArea_TID: Swift.Int
+  public static let ParamFilterArea_Userdata: Swift.Int
+  public static let WriteArea_Reserved: Swift.Int
+  public static let WriteArea_Epc: Swift.Int
+  public static let WriteArea_Tid: Swift.Int
+  public static let WriteArea_Userdata: Swift.Int
+  public static let ParamTidMode_Auto: Swift.Int
+  public static let ParamTidMode_Fixed: Swift.Int
+  public static let RfidProtocol_ISO18000_6c: Swift.Int
+  public static let RfidProtocol_ISO18000_6b: Swift.Int
+  public static let RfidProtocol_GBT_29768_2013: Swift.Int
+  public static let RfidProtocol_GJB_7383_1_2011: Swift.Int
+  public static let LockArea_Destroy: Swift.Int
+  public static let LockArea_Access: Swift.Int
+  public static let LockArea_Epc: Swift.Int
+  public static let LockArea_Tid: Swift.Int
+  public static let LockArea_UserData: Swift.Int
+  public static let BaseMid_GetCapabilities: Swift.Int
+  public static let BaseMid_SetPower: Swift.Int
+  public static let BaseMid_GetPower: Swift.Int
+  public static let BaseMid_SetFreqRange: Swift.Int
+  public static let BaseMid_GetFreqRange: Swift.Int
+  public static let BaseMid_SetFrequency: Swift.Int
+  public static let BaseMid_GetFrequency: Swift.Int
+  public static let BaseMid_SetAntennaHub: Swift.Int
+  public static let BaseMid_GetAntennaHub: Swift.Int
+  public static let BaseMid_SetTagLog: Swift.Int
+  public static let BaseMid_GetTagLog: Swift.Int
+  public static let BaseMid_SetEpcBaseband: Swift.Int
+  public static let BaseMid_GetEpcBaseband: Swift.Int
+  public static let BaseMid_SetAutoDormancy: Swift.Int
+  public static let BaseMid_GetAutoDormancy: Swift.Int
+  public static let BaseMid_InventoryEpc: Swift.Int
+  public static let BaseMid_WriteEpc: Swift.Int
+  public static let BaseMid_EraseEpc: Swift.Int
+  public static let BaseMid_LockEpc: Swift.Int
+  public static let BaseMid_KillEpc: Swift.Int
+  public static let BaseMid_MonzaQT: Swift.Int
+  public static let BaseMid_SetMultiMatchRule: Swift.Int
+  public static let BaseMid_GetMultiMatchRule: Swift.Int
+  public static let BaseMid_Inventory6b: Swift.Int
+  public static let BaseMid_Write6b: Swift.Int
+  public static let BaseMid_Lock6b: Swift.Int
+  public static let BaseMid_Lock6bGet: Swift.Int
+  public static let BaseMid_InventoryGb: Swift.Int
+  public static let BaseMid_WriteGb: Swift.Int
+  public static let BaseMid_LockGb: Swift.Int
+  public static let BaseMid_KillGb: Swift.Int
+  public static let BaseMid_InventoryGbT_70: Swift.Int
+  public static let BaseMid_InventoryGbT_71: Swift.Int
+  public static let TL_FSK: Swift.Int
+  public static let TL_FM0: Swift.Int
+  public static let BaseMid_Inventory6D: Swift.Int
+  public static let BaseMid_InventoryGJb: Swift.Int
+  public static let BaseMid_WriteGJb: Swift.Int
+  public static let BaseMid_LockGJb: Swift.Int
+  public static let BaseMid_KillGJb: Swift.Int
+  public static let BaseMid_SetGJbSIM: Swift.Int
+  public static let BaseMid_InventoryAndAccess: Swift.Int
+  public static let BaseLogMid_Access: Swift.Int
+  public static let AccessOperate_Read: Swift.Int
+  public static let AccessOperate_Write: Swift.Int
+  public static let AccessOperate_Lock: Swift.Int
+  public static let AccessOperate_Destroy: Swift.Int
+  public static let BaseMid_InventoryHybrid: Swift.Int
+  public static let BaseMid_EBookTransfer: Swift.Int
+  public static let BaseMid_SetResidenceTime: Swift.Int
+  public static let BaseMid_GetResidenceTime: Swift.Int
+  public static let BaseMid_SetGbBaseband: Swift.Int
+  public static let BaseMid_GetGbBaseband: Swift.Int
+  public static let BaseMid_SetGJbBaseband: Swift.Int
+  public static let BaseMid_GetGJbBaseband: Swift.Int
+  public static let BaseMid_SafeCertification: Swift.Int
+  public static let BaseMid_Stop: Swift.Int
+  public static let BaseLogMid_Epc: Swift.Int
+  public static let BaseLogMid_EpcOver: Swift.Int
+  public static let BaseLogMid_EpcAntId: Swift.Int
+  public static let BaseLogMid_6b: Swift.Int
+  public static let BaseLogMid_6bOver: Swift.Int
+  public static let BaseLogMid_Gb: Swift.Int
+  public static let BaseLogMid_GbOver: Swift.Int
+  public static let BaseLogMid_GJb: Swift.Int
+  public static let BaseLogMid_GJbOver: Swift.Int
+  public static let BaseLogMid_GJbRn11: Swift.Int
+  public static let BaseLogMid_GbSafeParam: Swift.Int
+  public static let BaseLogMid_TL: Swift.Int
+  public static let BaseLogMid_TLOver: Swift.Int
+  public static let BaseLogMid_6D: Swift.Int
+  public static let BaseLogMid_6DOver: Swift.Int
+  public static let AppMid_GetReaderInfo: Swift.Int
+  public static let AppMid_GetBaseVersion: Swift.Int
+  public static let AppMid_SetSerialParam: Swift.Int
+  public static let AppMid_GetSerialParam: Swift.Int
+  public static let AppMid_SetReaderIP: Swift.Int
+  public static let AppMid_GetReaderIP: Swift.Int
+  public static let AppMid_GetReaderMac: Swift.Int
+  public static let AppMid_SetTcpMode: Swift.Int
+  public static let AppMid_GetTcpMode: Swift.Int
+  public static let AppMid_SetGpo: Swift.Int
+  public static let AppMid_GetGpiState: Swift.Int
+  public static let AppMid_SetGpiTrigger: Swift.Int
+  public static let AppMid_GetGpiTrigger: Swift.Int
+  public static let AppMid_SetWiegand: Swift.Int
+  public static let AppMid_GetWiegand: Swift.Int
+  public static let AppMid_Reset: Swift.Int
+  public static let AppMid_SetReaderTime: Swift.Int
+  public static let AppMid_GetReaderTime: Swift.Int
+  public static let AppMid_Heartbeat: Swift.Int
+  public static let AppMid_SetReaderMac: Swift.Int
+  public static let AppMid_RestoreDefault: Swift.Int
+  public static let AppMid_SetRs485: Swift.Int
+  public static let AppMid_GetRs485: Swift.Int
+  public static let AppMid_SetBreakpointResume: Swift.Int
+  public static let AppMid_GetBreakpointResume: Swift.Int
+  public static let AppMid_GetCacheTagData: Swift.Int
+  public static let AppMid_ClearCacheTagData: Swift.Int
+  public static let AppMid_TagDataReply: Swift.Int
+  public static let AppMid_SetBeepOnOff: Swift.Int
+  public static let AppMid_SetBeep: Swift.Int
+  public static let AppMid_GetWhiteList: Swift.Int
+  public static let AppMid_ImportWhiteList: Swift.Int
+  public static let AppMid_DelWhiteList: Swift.Int
+  public static let AppMid_SetWhiteListActionParam: Swift.Int
+  public static let AppMid_GetWhiteListActionParam: Swift.Int
+  public static let AppMid_SetWhiteListSwitch: Swift.Int
+  public static let AppMid_GetWhiteListSwitch: Swift.Int
+  public static let AppMid_SetUdpParam: Swift.Int
+  public static let AppMid_GetUdpParam: Swift.Int
+  public static let AppMid_SetHttpParam: Swift.Int
+  public static let AppMid_GetHttpParam: Swift.Int
+  public static let AppMid_UsbKbdSwitch: Swift.Int
+  public static let AppMid_SetWifiHotspotSearch: Swift.Int
+  public static let AppMid_GetWifiHotspotSearch: Swift.Int
+  public static let AppMid_SetWifiHotspot: Swift.Int
+  public static let AppMid_GetWifiConnectStatus: Swift.Int
+  public static let AppMid_SetWifiIp: Swift.Int
+  public static let AppMid_GetWifiIp: Swift.Int
+  public static let AppMid_SetWifiOnOff: Swift.Int
+  public static let AppMid_GetWifiOnOff: Swift.Int
+  public static let AppMid_WifiRoaming: Swift.Int
+  public static let AppMid_SetWatchGog: Swift.Int
+  public static let AppMid_SetEasAlarm: Swift.Int
+  public static let AppMid_GetEasAlarm: Swift.Int
+  public static let AppMid_SetAlarmPerform: Swift.Int
+  public static let AppMid_GetAlarmPerform: Swift.Int
+  public static let AppMid_GetLxAirportParam: Swift.Int
+  public static let AppMid_SetReadiotLock: Swift.Int
+  public static let AppMid_GetReadiotLock: Swift.Int
+  public static let AppMid_CykeoAccessControl: Swift.Int
+  public static let AppLogMid_gpi: Swift.Int
+  public static let AppLogMid_gpiOver: Swift.Int
+  public static let AppLogMid_allGpiOver: Swift.Int
+  public static let UpdateMid_App: Swift.Int
+  public static let UpdateMid_Baseband: Swift.Int
+  public static let TestMid_CarrierWave: Swift.Int
+  public static let TestMid_DCbias: Swift.Int
+  public static let TestMid_DCbiasGet: Swift.Int
+  public static let TestMid_PowerCalibration: Swift.Int
+  public static let TestMid_PowerCalibrationGet: Swift.Int
+  public static let TestMid_VSWRcheck: Swift.Int
+  public static let TestMid_DCAutobias: Swift.Int
+  public static let TestMid_EnvRssiDetection: Swift.Int
+  public static let TestMid_RssiCalibrationSet: Swift.Int
+  public static let TestMid_RssiCalibrationGet: Swift.Int
+  public static let TestMid_EnvRssiAutoDetection: Swift.Int
+  public static let TestMid_AntAutoPointSearch: Swift.Int
+  public static let TestMid_SerialNoSet: Swift.Int
+  public static let TestMid_ReaderWorkModeSet: Swift.Int
+  public static let TestMid_ReaderWorkModeGet: Swift.Int
+  public static let TestMid_EpcEncryptionSet: Swift.Int
+  public static let TestMid_EpcEncryptionGet: Swift.Int
+  public static let TestMid_R2000RegisterRW: Swift.Int
+  public static let TestMid_R2000Gain: Swift.Int
+  public static let TestMid_GetSjc: Swift.Int
+  public static let TestMid_AntConnectDetection: Swift.Int
+  public static let TestMid_WorkModeInit: Swift.Int
+  public static let TestMid_WorkModeInitNotify: Swift.Int
+  public static let TestMid_NAK: Swift.Int
+  public static let TestMid_REFRESHRN: Swift.Int
+  public static let TestMid_GETRN: Swift.Int
+  public static let TestMid_ACCESS: Swift.Int
+  public static let TestMid_READ: Swift.Int
+  public static let TestMid_WRITE: Swift.Int
+  public static let TestMid_ERASE: Swift.Int
+  public static let TestMid_LOCK: Swift.Int
+  public static let TestMid_KILL: Swift.Int
+  public static let TestMid_DIVIDE: Swift.Int
+  public static let TestMid_DISPERSE: Swift.Int
+  public static let TestMid_SHRINK: Swift.Int
+  public static let TestMid_SORT: Swift.Int
+  public static let TestMid_Query: Swift.Int
+  public static let TestMid_QueryRep: Swift.Int
+  public static let TestMid_ACK: Swift.Int
+  public static let TestMid_Chip: Swift.Int
+  public static let AntennaNo_1: Swift.Int
+  public static let AntennaNo_2: Swift.Int
+  public static let AntennaNo_3: Swift.Int
+  public static let AntennaNo_4: Swift.Int
+  public static let AntennaNo_5: Swift.Int
+  public static let AntennaNo_6: Swift.Int
+  public static let AntennaNo_7: Swift.Int
+  public static let AntennaNo_8: Swift.Int
+  public static let AntennaNo_9: Swift.Int
+  public static let AntennaNo_10: Swift.Int
+  public static let AntennaNo_11: Swift.Int
+  public static let AntennaNo_12: Swift.Int
+  public static let AntennaNo_13: Swift.Int
+  public static let AntennaNo_14: Swift.Int
+  public static let AntennaNo_15: Swift.Int
+  public static let AntennaNo_16: Swift.Int
+  public static let AntennaNo_17: Swift.Int
+  public static let AntennaNo_18: Swift.Int
+  public static let AntennaNo_19: Swift.Int
+  public static let AntennaNo_20: Swift.Int
+  public static let AntennaNo_21: Swift.Int
+  public static let AntennaNo_22: Swift.Int
+  public static let AntennaNo_23: Swift.Int
+  public static let AntennaNo_24: Swift.Int
+  public static let AntennaNo_25: Swift.Int
+  public static let AntennaNo_26: Swift.Int
+  public static let AntennaNo_27: Swift.Int
+  public static let AntennaNo_28: Swift.Int
+  public static let AntennaNo_29: Swift.Int
+  public static let AntennaNo_30: Swift.Int
+  public static let AntennaNo_31: Swift.Int
+  public static let AntennaNo_32: Swift.Int
+  @objc deinit
+}
+public enum VendingMathineError : Swift.Error {
+  case invalidSelection
+  case insufficientFunds(coinsNeed: Swift.Int)
+  case outOfStack
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class LogBaseTLInfo : GReader.Message {
+  public var tagType: Swift.Int
+  public var epc: Swift.String
+  public var antId: Swift.Int
+  public var rssi: Swift.Int
+  public var childAntId: Swift.Int
+  public var strUtc: Swift.String
+  public var frequencyPoint: Swift.Int
+  public var phase: Swift.Int
+  public var rssidBm: Swift.Int
+  public var replySerialNumber: Swift.Int
+  public func toString() -> Swift.String
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class MsgBaseGetAutoDormancy : GReader.Message {
+  public var onOff: Swift.Int
+  public var freeTime: Swift.Int
+  public var readTime: Swift.Int
+  public init()
+  public func getClassName() -> Swift.String
+  public func toString() -> Swift.String
+  @objc deinit
+}

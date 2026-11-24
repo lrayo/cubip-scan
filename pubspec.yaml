@@ -1,0 +1,49 @@
+name: cubip_scan
+description: App Cubip Scan para el lector UHF RFID Geenfc GEE-UR-A7
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  material_ui: ^1.11.1
+  cupertino_ui: ^1.1.7
+  cubip_rfid:
+    path: packages/cubip_rfid
+  path_provider: ^2.1.5
+  share_plus: ^11.0.0
+  flutter_appauth: ^13.0.0
+  flutter_secure_storage: ^9.2.4
+  http: ^1.2.2
+  uuid: ^4.5.1
+  shared_preferences: ^2.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo/
+  fonts:
+    - family: Sora
+      fonts:
+        - asset: assets/fonts/Sora-Variable.ttf
+    - family: IBMPlexSans
+      fonts:
+        - asset: assets/fonts/IBMPlexSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSans-Bold.ttf
+          weight: 700

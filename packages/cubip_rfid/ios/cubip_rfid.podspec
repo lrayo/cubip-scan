@@ -1,0 +1,41 @@
+#
+# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
+# Run `pod lib lint cubip_rfid.podspec` to validate before publishing.
+#
+Pod::Spec.new do |s|
+  s.name             = 'cubip_rfid'
+  s.version          = '0.0.1'
+  s.summary          = 'Plugin nativo Cubip para el lector Geenfc GEE-UR-A7'
+  s.description      = <<-DESC
+Plugin nativo Cubip para el lector Geenfc GEE-UR-A7
+                       DESC
+  s.homepage         = 'http://example.com'
+  s.license          = { :file => '../LICENSE' }
+  s.author           = { 'Your Company' => 'email@example.com' }
+  s.source           = { :path => '.' }
+  s.source_files = 'cubip_rfid/Sources/cubip_rfid/**/*'
+  s.dependency 'Flutter'
+  s.platform = :ios, '15.0'
+
+  # Flutter.framework does not contain a i386 slice.
+  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
+  s.swift_version = '5.0'
+  s.frameworks = 'CoreBluetooth'
+  s.vendored_frameworks = 'Frameworks/GReader.framework'
+  # GReader.framework solo incluye arm64 de dispositivo (iOS 12+). No hay slice de simulador.
+  s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386 x86_64 arm64',
+    'OTHER_LDFLAGS' => '-framework GReader'
+  }
+  s.user_target_xcconfig = {
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386 x86_64 arm64'
+  }
+
+
+  # If your plugin requires a privacy manifest, for example if it uses any
+  # required reason APIs, update the PrivacyInfo.xcprivacy file to describe your
+  # plugin's privacy impact, and then uncomment this line. For more information,
+  # see https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+  # s.resource_bundles = {'cubip_rfid_privacy' => ['cubip_rfid/Sources/cubip_rfid/PrivacyInfo.xcprivacy']}
+end

@@ -1,0 +1,6 @@
+framework module GReader {
+  umbrella header "GReader.h"
+  export *
+
+  module * { export * }
+}
