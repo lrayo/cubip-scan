@@ -217,7 +217,7 @@ class _AdvancedServerSectionState extends State<_AdvancedServerSection> {
               controller: _api,
               decoration: const InputDecoration(
                 labelText: 'URL de la API',
-                hintText: 'http://192.168.1.10:8081',
+                hintText: AppConfig.defaultApiBaseUrl,
                 border: OutlineInputBorder(),
               ),
               onChanged: _controller.setApiBaseUrl,
@@ -229,7 +229,7 @@ class _AdvancedServerSectionState extends State<_AdvancedServerSection> {
               controller: _keycloak,
               decoration: const InputDecoration(
                 labelText: 'URL de Keycloak',
-                hintText: 'http://192.168.1.10:8080',
+                hintText: AppConfig.defaultKeycloakUrl,
                 border: OutlineInputBorder(),
               ),
               onChanged: _onKeycloakChanged,

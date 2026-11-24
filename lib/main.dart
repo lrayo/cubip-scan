@@ -31,8 +31,8 @@ Future<AppController> createProductionController() async {
   final prefs = await SharedPreferences.getInstance();
   final config = AppConfig(
     issuer: prefs.getString('cubip.issuer') ?? '',
-    apiBaseUrl: prefs.getString('cubip.apiBase') ?? '',
-    keycloakUrl: prefs.getString('cubip.keycloak') ?? '',
+    apiBaseUrl: prefs.getString('cubip.apiBase') ?? AppConfig.defaultApiBaseUrl,
+    keycloakUrl: prefs.getString('cubip.keycloak') ?? AppConfig.defaultKeycloakUrl,
     realm: prefs.getString('cubip.realm') ?? AppConfig.defaultRealm,
   );
   config.addListener(() {

@@ -6,15 +6,22 @@ import 'lan_url.dart';
 class AppConfig extends ChangeNotifier {
   AppConfig({
     this.issuer = '',
-    this.apiBaseUrl = '',
-    this.keycloakUrl = '',
+    String? apiBaseUrl,
+    String? keycloakUrl,
     this.realm = defaultRealm,
-  });
+  })  : apiBaseUrl = (apiBaseUrl != null && apiBaseUrl.trim().isNotEmpty)
+            ? apiBaseUrl.trim()
+            : defaultApiBaseUrl,
+        keycloakUrl = (keycloakUrl != null && keycloakUrl.trim().isNotEmpty)
+            ? keycloakUrl.trim()
+            : defaultKeycloakUrl;
 
   static const String clientId = 'wms-mobile';
   static const String redirectUrl = 'com.megadeep.cubipscan:/oauth';
   static const List<String> scopes = ['openid', 'profile'];
   static const String defaultRealm = 'wms-realm';
+  static const String defaultKeycloakUrl = 'https://auth.cubip.app';
+  static const String defaultApiBaseUrl = 'https://api.cubip.app';
 
   /// Issuer completo si se sobrescribe; vacío = se arma con Keycloak + realm.
   String issuer;
@@ -24,8 +31,10 @@ class AppConfig extends ChangeNotifier {
 
   /// `{keycloak}/realms/{realm}`, o vacío si falta alguno.
   String get builtIssuer {
-    final base = trimTrailingSlash(keycloakUrl);
-    final realmName = realm.trim();
+    final effectiveKeycloak =
+        keycloakUrl.trim().isNotEmpty ? keycloakUrl : defaultKeycloakUrl;
+    final base = trimTrailingSlash(effectiveKeycloak);
+    final realmName = realm.trim().isNotEmpty ? realm.trim() : defaultRealm;
     if (base.isEmpty || realmName.isEmpty) return '';
     return '$base/realms/$realmName';
   }
@@ -35,7 +44,11 @@ class AppConfig extends ChangeNotifier {
     return override.isNotEmpty ? override : builtIssuer;
   }
 
-  String get trimmedApiBase => trimTrailingSlash(apiBaseUrl);
+  String get trimmedApiBase {
+    final effective =
+        apiBaseUrl.trim().isNotEmpty ? apiBaseUrl : defaultApiBaseUrl;
+    return trimTrailingSlash(effective);
+  }
 
   bool get hasIssuerOverride => trimTrailingSlash(issuer).isNotEmpty;
 

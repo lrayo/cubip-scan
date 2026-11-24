@@ -18,7 +18,7 @@ class ConnectionProbe {
       : _client = client ?? http.Client();
 
   /// Única constante de la ruta de salud de la API.
-  static const String healthzPath = '/healthz';
+  static const String healthzPath = '/api/v1/health';
 
   final http.Client _client;
   final Duration timeout;
