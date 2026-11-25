@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../location/location.dart';
+import '../location/location_qr_parser.dart';
 import '../state/app_controller.dart';
 import '../theme/cubip_theme.dart';
 
@@ -27,6 +29,11 @@ class _LocationScreenState extends State<LocationScreen> {
     super.dispose();
   }
 
+  void _selectAndClose(Location location) {
+    widget.controller.selectLocation(location);
+    Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
@@ -34,6 +41,7 @@ class _LocationScreenState extends State<LocationScreen> {
       listenable: controller,
       builder: (context, _) {
         final locations = controller.visibleLocations;
+        final qrMatch = findLocationByQr(_prefix.text, controller.locations);
         return Scaffold(
           appBar: AppBar(
             title: const Text('Ubicación'),
@@ -74,7 +82,22 @@ class _LocationScreenState extends State<LocationScreen> {
                   prefixIcon: Icon(Icons.search),
                 ),
                 onChanged: controller.setLocationPrefix,
+                onSubmitted: (value) {
+                  final match = findLocationByQr(value, controller.locations);
+                  if (match != null) {
+                    _selectAndClose(match);
+                  }
+                },
               ),
+              if (qrMatch != null) ...[
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  key: const Key('qr-location-match'),
+                  onPressed: () => _selectAndClose(qrMatch),
+                  icon: const Icon(Icons.qr_code_2),
+                  label: Text('Coincidencia QR: ${qrMatch.code} — Seleccionar'),
+                ),
+              ],
               if (controller.locationsFromCache) ...[
                 const SizedBox(height: 8),
                 const Text(
@@ -124,10 +147,7 @@ class _LocationScreenState extends State<LocationScreen> {
                       trailing: controller.selectedLocation?.id == location.id
                           ? const Text('Actual', style: TextStyle(color: CubipColors.cyanSoft))
                           : null,
-                      onTap: () {
-                        controller.selectLocation(location);
-                        Navigator.of(context).maybePop();
-                      },
+                      onTap: () => _selectAndClose(location),
                     ),
                   ),
             ],
